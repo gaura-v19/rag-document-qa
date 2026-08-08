@@ -1,8 +1,11 @@
-import ollama  # or replace with openai/other client
+from google import genai
+import os
+
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 def generate_answer(query: str, chunks: list[dict]):
     """
-    Builds a prompt from retrieved chunks, streams the LLM's answer,
+    Builds a prompt from retrieved chunks, streams Gemini's answer,
     and appends citations at the end.
     """
     context = "\n\n".join(
@@ -18,10 +21,14 @@ Context:
 Question: {query}
 """
 
-    stream = ollama.generate(model="llama3", prompt=prompt, stream=True)
+    stream = client.models.generate_content_stream(
+    model="gemini-3.6-flash",
+    contents=prompt
+)
+
     full_answer = ""
-    for part in stream:
-        token = part["response"]
+    for chunk in stream:
+        token = chunk.text or ""
         full_answer += token
         print(token, end="", flush=True)
 
